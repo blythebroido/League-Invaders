@@ -21,6 +21,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 	Font endFont2;
 	Font endFont3;
 	Rocketship rocketship = new Rocketship(250, 700, 50, 50);
+	ObjectManager objectManager = new ObjectManager();
 
 	GamePanel() {
 		timer = new Timer(1000 / 60, this);
@@ -30,6 +31,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		endFont = new Font("Arial", Font.PLAIN, 48);
 		endFont2 = new Font("Arial", Font.PLAIN, 25);
 		endFont3 = new Font("Arial", Font.PLAIN, 25);
+		objectManager.addObject(rocketship);
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -83,6 +85,9 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		if(e.getKeyCode()==KeyEvent.VK_DOWN){
 			rocketship.y+=rocketship.speed;
 		}
+		if(e.getKeyCode()==KeyEvent.VK_SPACE){
+			objectManager.addObject(new Projectile(rocketship.x+18, rocketship.y, 10, 10));
+		}
 	}
 
 	public void keyReleased(KeyEvent e) {
@@ -94,7 +99,15 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 	}
 
 	void updateGameState() {
-		rocketship.update();
+		objectManager.manageEnemies();
+		objectManager.update();
+		objectManager.checkCollision();
+		if(!(rocketship.isAlive)){
+			currentstate = endstate;
+			objectManager.reset();
+			rocketship = new Rocketship(225, 750, 50, 50);
+			objectManager.addObject(rocketship);
+		}
 	}
 
 	void updateEndState() {
@@ -112,13 +125,13 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		g.drawString("Press ENTER to start", 120, 300);
 		g.setFont(titleFont3);
 		g.setColor(Color.YELLOW);
-		g.drawString("Press SPACE for instructions", 80, 400);
+		g.drawString("Space = shoot; don't get hit by yellow", 50, 400);
 	}
 
 	void drawGameState(Graphics g) {
 		g.setColor(Color.black);
 		g.fillRect(0, 0, LeagueInvaders.width, LeagueInvaders.height);
-		rocketship.draw(g);
+		objectManager.draw(g);
 	}
 
 	void drawEndState(Graphics g) {
@@ -129,9 +142,9 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 		g.drawString("GAME OVER", 90, 100);
 		g.setFont(endFont2);
 		g.setColor(Color.BLACK);
-		g.drawString("You killed 0 aliens.", 140, 300);
+		g.drawString("You killed " + objectManager.getScore() + " aliens.", 140, 300);
 		g.setFont(endFont3);
 		g.setColor(Color.BLACK);
-		g.drawString("Press BACKSPACE to restart", 85, 500);
+		g.drawString("Press ENTER to restart", 85, 500);
 	}
 }
